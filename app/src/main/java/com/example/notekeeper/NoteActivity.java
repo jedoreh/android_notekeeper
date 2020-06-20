@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -17,6 +18,7 @@ import android.widget.Spinner;
 import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
+    private final String TAG = getClass().getSimpleName();
     public static final String NOTE_POSITION = "com.example.notekeeper.NOTE_POSITION";
     public static final int POSITION_NOT_SET = -1;
     private NoteInfo mNote;
@@ -27,6 +29,7 @@ public class NoteActivity extends AppCompatActivity {
     private int mNotePosition;
     private boolean mIsCancelling;
     private NoteActivityViewModel mViewModel;
+    private int mPosition;
 
 
     @Override
@@ -62,7 +65,10 @@ public class NoteActivity extends AppCompatActivity {
         mTextNoteText = findViewById(R.id.text_note_text);
 
         if(!mIsNewNote)
-        displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
+            displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
+
+        Log.d(TAG, "onCreate");
+
     }
 
     private void saveOriginalNoteValues() {
@@ -85,6 +91,7 @@ public class NoteActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if(mIsCancelling) {
+            Log.i(TAG, "cancelling note at position: " + mNotePosition);
             if(mIsNewNote) {
                 DataManager.getInstance().removeNote(mNotePosition);
             } else {
@@ -94,6 +101,8 @@ public class NoteActivity extends AppCompatActivity {
         } else {
             saveNote();
         }
+
+        Log.d(TAG, "onPause");
 
     }
 
@@ -122,11 +131,15 @@ public class NoteActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int position = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
         mIsNewNote = position == POSITION_NOT_SET;
-        if(mIsNewNote) {
+        if(mIsNewNote){
             createNewNote();
         } else {
             mNote = DataManager.getInstance().getNotes().get(position);
         }
+
+        Log.i(TAG,"mPosition: " + position);
+        // mNote = DataManager.getInstance().getNotes().get(mPosition);
+
 
 
     }
@@ -158,9 +171,32 @@ public class NoteActivity extends AppCompatActivity {
         } else if (id == R.id.action_cancel) {
             mIsCancelling = true;
             finish();
+        } else if (id == R.id.action_next) {
+            moveNext();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.action_next);
+        int lastNoteIndex = DataManager.getInstance().getNotes().size() - 1;
+        item.setEnabled(mNotePosition < lastNoteIndex);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void moveNext() {
+        saveNote();
+
+        ++mNotePosition;
+        mNote = DataManager.getInstance().getNotes().get(mNotePosition);
+
+        saveOriginalNoteValues();
+
+        displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
+
+        invalidateOptionsMenu();
     }
 
     private void sendEmail() {
