@@ -1,10 +1,13 @@
 package com.example.notekeeper;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Menu;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -34,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private LinearLayoutManager mNotesLayoutManager;
     private CourseRecyclerAdapter mCourseRecyclerAdapter;
     private GridLayoutManager mCoursesLayoutManager;
+    private TextView myDisplayName;
+    private TextView myEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +69,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavController navController = Navigation.findNavController(this, R.id.nav_view);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);*/
+        View header = navigationView.getHeaderView(0);
+        myDisplayName = header.findViewById(R.id.my_display_name);
+        myEmail = header.findViewById(R.id.my_email);
 
+
+        PreferenceClass.init(getApplicationContext());
+
+        String name = PreferenceClass.read(PreferenceClass.NAME, "");
+        if (name != null) {
+            myDisplayName.setText(name);
+            Toast.makeText(MainActivity.this,name,Toast.LENGTH_LONG).show();
+            String email = PreferenceClass.read(PreferenceClass.EMAIL, "");
+            if (email != null) {
+                myEmail.setText(email);
+                //Toast.makeText(MainActivity.this,email,Toast.LENGTH_LONG).show();
+            }
+        }
 
         initializeDisplayContent();
     }
@@ -142,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            startActivity(new Intent(this, NewSettingsActivity.class));
 
             return true;
         }
